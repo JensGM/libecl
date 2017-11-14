@@ -313,6 +313,7 @@ void field_smspec( std::vector< eclvar >& nodes,
     for ( const auto& var : field_class_vars ) {
         const auto& ecl_kw = "F" + kw_nex2ecl.at( var ); // F for FIELD
         const auto& unit = plt.header.unit_system.unit_str( var );
+        float conversion = plt.header.unit_system.conversion( var );
 
         auto* node = ecl_sum_add_var( ecl_sum, ecl_kw.c_str(), NULL, -1,
                                       unit.c_str(), 0.0);
@@ -323,7 +324,7 @@ void field_smspec( std::vector< eclvar >& nodes,
                       is::varname( var ) );
 
         for (size_t i = 0; i < var_values.size(); i++)
-            nodes.push_back( { node, var_values[i].value, i } );
+            nodes.push_back( { node, var_values[i].value * conversion, i } );
     }
 }
 
@@ -351,13 +352,14 @@ void well_smspec( std::vector< eclvar >& nodes,
     auto instancenames = unique( well, get::instancename_str );
     for ( const auto& well_name : instancenames ) {
         std::vector< NexusData > well_instance;
-        std::copy_if( well_instance.begin(), well_instance.end(),
-                      std::back_inserter( well ),
+        std::copy_if( well.begin(), well.end(),
+                      std::back_inserter( well_instance ),
                       is::instancename( well_name ) );
 
-        for ( const auto& var : well_class_vars) {
+        for ( const auto& var : well_class_vars ) {
             const auto& ecl_kw = "W" + kw_nex2ecl.at( var );
             const auto& unit = plt.header.unit_system.unit_str( var );
+            float conversion = plt.header.unit_system.conversion( var );
 
             auto* node = ecl_sum_add_var( ecl_sum,
                                           ecl_kw.c_str(),
@@ -369,7 +371,56 @@ void well_smspec( std::vector< eclvar >& nodes,
                         is::varname( var ) );
 
             for (size_t i = 0; i < var_values.size(); i++)
-              nodes.push_back( { node, var_values[i].value, i } );
+              nodes.push_back( { node, var_values[i].value * conversion, i } );
+        }
+    }
+}
+
+void region_smspec( std::vector< eclvar >& ecl_values,
+                    std::set< std::string >& unknown_varnames,
+                    ecl_sum_type* ecl_sum,
+                    const NexusPlot& plt ) {
+
+    auto data = plt.data;
+
+    std::vector< NexusData > region;
+    std::copy_if( data.begin(), data.end(), std::back_inserter( region ),
+                  is::classname( "REGION" ) );
+    std::sort( region.begin(), region.end(), cmp::timestep );
+
+    /* Only keep entries we have translations for */
+    auto region_class_vars = varnames( plt, "REGION" );
+    auto mid = std::partition( region_class_vars.begin(), region_class_vars.end(),
+        []( const std::string& var ) {
+           return (bool) kw_nex2ecl.count( var );
+        });
+    unknown_varnames.insert( mid, region_class_vars.end() );
+    region_class_vars.erase( mid, region_class_vars.end() );
+
+    auto instancenames = unique( region, get::instancename_str );
+    for ( const auto& region_name : instancenames ) {
+        std::vector< NexusData > region_instance;
+        std::copy_if( region.begin(), region.end(),
+                      std::back_inserter( region_instance ),
+                      is::instancename( region_name ) );
+
+        for ( const auto& var : region_class_vars ) {
+            const auto& ecl_kw = "R" + kw_nex2ecl.at( var );
+            const auto& unit = plt.header.unit_system.unit_str( var );
+            float conversion = plt.header.unit_system.conversion( var );
+
+            auto* node = ecl_sum_add_var( ecl_sum,
+                                          ecl_kw.c_str(),
+                                          region_name.c_str(), -2,
+                                          unit.c_str(), 0.0);
+            std::vector< NexusData > var_values;
+            std::copy_if( region_instance.begin(), region_instance.end(),
+                        std::back_inserter( var_values ),
+                        is::varname( var ) );
+
+            for (size_t i = 0; i < var_values.size(); i++)
+              ecl_values.push_back( { node, var_values[i].value * conversion,
+                                      i } );
         }
     }
 }
@@ -402,9 +453,10 @@ ecl_sum_type* nex::ecl_summary(const std::string& ecl_case,
      * Create ecl smspec nodes
      */
     std::set< std::string > unknown_varnames;
-    std::vector< eclvar > smspec_nodes;
-    field_smspec( smspec_nodes, unknown_varnames, ecl_sum, plt );
-    well_smspec( smspec_nodes, unknown_varnames, ecl_sum, plt );
+    std::vector< eclvar > ecl_values;
+    field_smspec( ecl_values, unknown_varnames, ecl_sum, plt );
+    region_smspec( ecl_values, unknown_varnames, ecl_sum, plt );
+    well_smspec( ecl_values, unknown_varnames, ecl_sum, plt );
 
     for ( const auto& var : unknown_varnames )
         std::cerr << "Warning: could not convert nexus variable " <<
@@ -426,7 +478,7 @@ ecl_sum_type* nex::ecl_summary(const std::string& ecl_case,
      * Set ecl data
      */
 
-    for ( const auto& node : smspec_nodes ) {
+    for ( const auto& node : ecl_values ) {
         auto* ts = timesteps[ node.timestep_index ];
         ecl_sum_tstep_set_from_node( ts, node.node, node.value );
     }
