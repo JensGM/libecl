@@ -387,6 +387,9 @@ class VectorTemplate(BaseCClass):
         else:
             raise TypeError("Divisor has wrong type:%s" % type(divisor))
 
+    def __truediv__(self, divisor):
+        self.__div__(divisor)
+
     # End mathematical operations
     #################################################################
 

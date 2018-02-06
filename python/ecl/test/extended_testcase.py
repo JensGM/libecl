@@ -143,7 +143,7 @@ class ExtendedTestCase(TestCase):
             if verbose:
                 print("%s = %d" % (identifier, value))
 
-            self.assertTrue(enum_class.__dict__.has_key(identifier), "Enum does not have identifier: %s" % identifier)
+            self.assertTrue(identifier in enum_class.__dict__, "Enum does not have identifier: %s" % identifier)
             class_value = enum_class.__dict__[identifier]
             self.assertEqual(class_value, value, "Enum value for identifier: %s does not match: %s != %s" % (identifier, class_value, value))
 

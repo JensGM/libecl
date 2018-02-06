@@ -36,7 +36,7 @@ class KWFunctionTest(EclTest):
 
         kw = Ecl3DKW.create( "REGIONS" , grid , EclDataType.ECL_INT , global_active = True )
         kw.assign( 0 )
-        kw[0:nx*ny/2] = 1
+        kw[0:int(nx*ny/2)] = 1
         kw[5,2,0] = 0
         kw[0,9,0] = 2
 
@@ -56,4 +56,3 @@ class KWFunctionTest(EclTest):
 
         for i in range(10):
             self.assertEqual( kw[i,7,0] , 1 )
-

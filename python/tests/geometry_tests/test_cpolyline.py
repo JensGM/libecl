@@ -11,16 +11,16 @@ class CPolylineTest(EclTest):
         self.polyline1 = self.createTestPath("local/geometry/pol11.xyz")
         self.polyline2 = self.createTestPath("local/geometry/pol8.xyz")
         self.polyline3 = self.createTestPath("local/geometry/pol8_noend.xyz")
-        
 
-        
+
+
     def test_construction(self):
         polyline = CPolyline()
         self.assertEqual( len(polyline) , 0 )
-        
+
         with self.assertRaises(IOError):
             CPolyline.createFromXYZFile( "Does/not/exist" )
-            
+
         p1 = CPolyline.createFromXYZFile( self.polyline1 )
         self.assertEqual( len(p1) , 13 )
         x,y = p1[-1]
@@ -40,7 +40,7 @@ class CPolylineTest(EclTest):
         self.assertEqual(y , 6605835.119461)
 
 
-        
+
     def test_front(self):
         polyline = CPolyline()
         polyline.addPoint( 1 , 1 )
@@ -72,7 +72,7 @@ class CPolylineTest(EclTest):
 
         polyline = CPolyline( init_points = [(0,0) , (1,0) , (1,1) , (2,2)])
         self.assertEqual( polyline.segmentLength() , 2 + math.sqrt(2))
-        
+
 
     def test_extend_to_bbox(self):
         bbox = [(0,0) , (10,0) , (10,10) , (0,10)]
@@ -80,7 +80,7 @@ class CPolylineTest(EclTest):
         polyline = CPolyline( init_points = [(11,11) , (13,13)])
         with self.assertRaises(ValueError):
             polyline.extendToBBox( bbox , start = False )
-            
+
 
         polyline = CPolyline( init_points = [(1,1) , (3,3)])
 
@@ -89,8 +89,8 @@ class CPolylineTest(EclTest):
 
         line1 = polyline.extendToBBox( bbox , start = False  )
         self.assertEqual( line1 , CPolyline( init_points = [(3,3) , (10,10)]))
-        
-        
+
+
 
 
     def test_item(self):
@@ -100,27 +100,27 @@ class CPolylineTest(EclTest):
 
         with self.assertRaises(TypeError):
             (x,y) = polyline["KEY"]
-            
+
         with self.assertRaises(IndexError):
             (x,y) = polyline[10]
-            
+
         (x,y) = polyline[0]
         self.assertEqual( x , 10 )
         self.assertEqual( y , 20 )
-        
+
         polyline.addPoint(20,20)
         (x,y) = polyline[-1]
         self.assertEqual( x , 20 )
         self.assertEqual( y , 20 )
-        
-        
+
+
     def test_cross_segment(self):
         polyline = CPolyline( init_points = [(0,0), (1,0) , (1,1)])
         #
         #            x
         #            |
         #            |
-        #            |       
+        #            |
         #    x-------x
         #
 
@@ -146,27 +146,24 @@ class CPolylineTest(EclTest):
         self.assertTrue( polyline1.intersects( polyline2 ))
         self.assertTrue( polyline1.intersects( polyline3 ))
         self.assertFalse( polyline1.intersects( polyline4 ))
-        
+
 
     def test_intersects2(self):
         polyline = CPolyline( init_points = [(2,10),(2,100)])
         self.assertTrue( polyline.intersects( polyline ))
 
 
-        
+
     def test_name(self):
         p1 = CPolyline()
         self.assertTrue( p1.getName() is None )
 
         p2 = CPolyline( name = "Poly2" )
         self.assertEqual( p2.getName() , "Poly2")
-        
+
 
     def test_unzip(self):
         pl = CPolyline( init_points = [(0,3) , (1,4) , (2,5)] )
         x,y = pl.unzip()
         self.assertEqual(x , [0,1,2])
         self.assertEqual(y , [3,4,5])
-
-
-    

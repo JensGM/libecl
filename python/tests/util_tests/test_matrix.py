@@ -2,6 +2,7 @@ from ecl.util import Matrix , RandomNumberGenerator
 from ecl.util.enums import RngAlgTypeEnum, RngInitModeEnum
 from ecl.test import TestAreaContext
 from tests import EclTest
+import cwrap
 
 class MatrixTest(EclTest):
     def test_matrix(self):
@@ -54,18 +55,18 @@ class MatrixTest(EclTest):
 
         with self.assertRaises(ValueError):
             m.copyColumn(-2,0)
-            
+
         m.copyColumn(1, 0)
         for i in range(m.rows()):
             self.assertEqual( m[i,0] , m[i,1] )
 
-    
+
     def test_matrix_scale(self):
         m = Matrix(2,2 , value = 1)
         m.scaleColumn(0 , 2)
         self.assertEqual(2 , m[0,0])
         self.assertEqual(2 , m[1,0])
-        
+
         m.setAll(1)
         m.scaleRow(1 , 2 )
         self.assertEqual(2 , m[1,0])
@@ -73,7 +74,7 @@ class MatrixTest(EclTest):
 
         with self.assertRaises(IndexError):
             m.scaleColumn(10 , 99)
-        
+
         with self.assertRaises(IndexError):
             m.scaleRow(10 , 99)
 
@@ -109,9 +110,9 @@ class MatrixTest(EclTest):
         m[0,1] = 1
         m[1,0] = 2
         m[1,1] = 3
-        
+
         with TestAreaContext("matrix_fprint"):
-            with open("matrix.txt", "w") as f:
+            with cwrap.open("matrix.txt", "w") as f:
                 m.fprint( f )
 
             with open("matrix.txt") as f:
@@ -123,7 +124,7 @@ class MatrixTest(EclTest):
             self.assertEqual( l2[0] , m[1,0])
             self.assertEqual( l2[1] , m[1,1])
 
-            
+
     def test_copy_equal(self):
         m1 = Matrix(2, 2)
         m1[0,0] = 0
@@ -133,7 +134,7 @@ class MatrixTest(EclTest):
 
         m2 = m1.copy( )
         self.assertTrue( m1 == m2 )
-        
+
     def test_sub_copy(self):
         m1 = Matrix(3,3)
         rng = RandomNumberGenerator(RngAlgTypeEnum.MZRAN, RngInitModeEnum.INIT_DEFAULT)
@@ -141,7 +142,7 @@ class MatrixTest(EclTest):
 
         with self.assertRaises(ValueError):
             m2 = m1.subCopy( 0,0,4,2 )
-            
+
         with self.assertRaises(ValueError):
             m2 = m1.subCopy( 0,0,2,4 )
 
@@ -151,13 +152,13 @@ class MatrixTest(EclTest):
         with self.assertRaises(ValueError):
             m2 = m1.subCopy( 0,2,1,2 )
 
-            
+
         m2 = m1.subCopy( 0,0,2,2 )
         for i in range(2):
             for j in range(2):
                 self.assertEqual( m1[i,j] , m2[i,j])
 
-                
+
     def test_transpose(self):
         m = Matrix(3,2)
         m[0,0] = 0
@@ -167,9 +168,9 @@ class MatrixTest(EclTest):
         m[0,1] = 1
         m[1,1] = 3
         m[2,1] = 5
-        
-        mt = m.transpose( ) 
-        
+
+        mt = m.transpose( )
+
         self.assertEqual(m[0,0] , 0)
         self.assertEqual(m[1,0] , 2)
         self.assertEqual(m[2,0] , 4)
@@ -188,7 +189,7 @@ class MatrixTest(EclTest):
 
         self.assertEqual(mt[0,2] , 4)
         self.assertEqual(mt[1,2] , 5)
-        
+
         m.transpose( inplace = True )
         self.assertEqual( m , mt )
 
@@ -208,15 +209,15 @@ class MatrixTest(EclTest):
         m[0,1] = 1
         m[1,1] = 3
         m[2,1] = 5
-        
-        mt = m.transpose( ) 
+
+        mt = m.transpose( )
 
         m2 = Matrix.matmul( m , mt )
-        
+
         self.assertEqual( m2[0,0] , 1  )
         self.assertEqual( m2[1,1] , 13 )
         self.assertEqual( m2[2,2] , 41 )
-        
+
 
     def test_csv(self):
         m = Matrix(2, 2)
