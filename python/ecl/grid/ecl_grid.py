@@ -697,6 +697,8 @@ class EclGrid(BaseCClass):
             k -= 1
             corner += 4
 
+        i, j, k = int(i), int(j), int(k)
+        corner = int(corner)
         if self._ijk_valid(i, j, k):
             return self.getCellCorner(corner, global_index=i + j*nx + k*nx*ny)
         else:
