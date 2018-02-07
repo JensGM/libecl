@@ -1,22 +1,23 @@
 #!/usr/bin/env python
-#  Copyright (C) 2014  Statoil ASA, Norway. 
-#   
+#  Copyright (C) 2014  Statoil ASA, Norway.
+#
 #  The file 'test_fault_blocks.py' is part of ERT - Ensemble based Reservoir Tool.
-#   
-#  ERT is free software: you can redistribute it and/or modify 
-#  it under the terms of the GNU General Public License as published by 
-#  the Free Software Foundation, either version 3 of the License, or 
-#  (at your option) any later version. 
-#   
-#  ERT is distributed in the hope that it will be useful, but WITHOUT ANY 
-#  WARRANTY; without even the implied warranty of MERCHANTABILITY or 
-#  FITNESS FOR A PARTICULAR PURPOSE.   
-#   
-#  See the GNU General Public License at <http://www.gnu.org/licenses/gpl.html> 
+#
+#  ERT is free software: you can redistribute it and/or modify
+#  it under the terms of the GNU General Public License as published by
+#  the Free Software Foundation, either version 3 of the License, or
+#  (at your option) any later version.
+#
+#  ERT is distributed in the hope that it will be useful, but WITHOUT ANY
+#  WARRANTY; without even the implied warranty of MERCHANTABILITY or
+#  FITNESS FOR A PARTICULAR PURPOSE.
+#
+#  See the GNU General Public License at <http://www.gnu.org/licenses/gpl.html>
 #  for more details.
 from __future__ import print_function
 from unittest import skipIf
 import warnings
+import cwrap
 
 from ecl import EclDataType
 from ecl.eclfile import EclKW
@@ -40,9 +41,9 @@ class FaultBlockTest(EclTest):
             reg.select_kslice( k , k )
             self.kw.assign( k , mask = reg )
             self.kw[ k * self.grid.getNX() * self.grid.getNY() + 7] = 177
-            
 
-            
+
+
     def test_fault_block(self):
         grid = EclGrid.createRectangular( (5,5,1) , (1,1,1) )
         kw = EclKW( "FAULTBLK" , grid.getGlobalSize() , EclDataType.ECL_INT )
@@ -70,9 +71,10 @@ class FaultBlockTest(EclTest):
                 fileH.write("4 4 4 0 0\n")
                 fileH.write("4 4 4 0 5\n")
                 fileH.write("/\n")
+            with cwrap.open("kw.grdecl") as f:
+                kw = EclKW.read_grdecl(
+                    f, "FAULTBLK", ecl_type=EclDataType.ECL_INT)
 
-            kw = EclKW.read_grdecl(open("kw.grdecl") , "FAULTBLK" , ecl_type = EclDataType.ECL_INT)
-        
         grid = EclGrid.createRectangular( (5,5,1) , (1,1,1) )
         layer = FaultBlockLayer( grid , 0 )
         layer.loadKeyword( kw )
@@ -89,8 +91,8 @@ class FaultBlockTest(EclTest):
         with self.assertRaises(IndexError):
             layer[5,5]
 
-                
-        
+
+
     def test_neighbours(self):
 
         with TestAreaContext("python/fault_block_layer/neighbour") as work_area:
@@ -103,8 +105,10 @@ class FaultBlockTest(EclTest):
                 fileH.write("4 4 4 0 5\n")
                 fileH.write("/\n")
 
-            kw = EclKW.read_grdecl(open("kw.grdecl") , "FAULTBLK" , ecl_type = EclDataType.ECL_INT)
-        
+            with cwrap.open("kw.grdecl") as f:
+                kw = EclKW.read_grdecl(
+                    f, "FAULTBLK", ecl_type=EclDataType.ECL_INT)
+
         grid = EclGrid.createRectangular( (5,5,1) , (1,1,1) )
         layer = FaultBlockLayer( grid , 0 )
 
@@ -117,7 +121,7 @@ class FaultBlockTest(EclTest):
         self.assertEqual( block1.getParentLayer() , layer )
 
         #Expected: 1 -> {2,4}, 2 -> {1,3,4}, 3 -> {2}, 4 -> {1,2}, 5-> {}
-                
+
         neighbours = block1.getNeighbours()
         self.assertEqual( len(neighbours) , 2)
         self.assertTrue( block2 in neighbours )
@@ -128,7 +132,7 @@ class FaultBlockTest(EclTest):
         self.assertTrue( block1 in neighbours )
         self.assertTrue( block3 in neighbours )
         self.assertTrue( block4 in neighbours )
-                
+
         neighbours = block3.getNeighbours()
         self.assertEqual( len(neighbours) , 1)
         self.assertTrue( block2 in neighbours )
@@ -141,7 +145,7 @@ class FaultBlockTest(EclTest):
         neighbours = block5.getNeighbours()
         self.assertEqual( len(neighbours) , 0)
 
-        
+
 
 
     def test_neighbours2(self):
@@ -162,14 +166,17 @@ class FaultBlockTest(EclTest):
                 fileH.write("3 3 3 3 2 2 2 2 \n")
                 fileH.write("3 3 3 3 2 2 2 2 \n")
                 fileH.write("/\n")
-                
-            kw = EclKW.read_grdecl(open("faultblock.grdecl") , "FAULTBLK" , ecl_type = EclDataType.ECL_INT)
-            with open("faults.grdecl" , "w") as f:
+
+            with cwrap.open("faultblock.grdecl") as f:
+                kw = EclKW.read_grdecl(
+                    f, "FAULTBLK", ecl_type=EclDataType.ECL_INT)
+
+            with open("faults.grdecl", "w") as f:
                 f.write("FAULTS\n")
                 f.write("\'FY\'   1   4   4   4   1   1  'Y'  /\n")
                 f.write("\'FX\'   4   4   1   8   1   1  'X'  /\n")
                 f.write("/")
-            
+
             faults = FaultCollection( grid , "faults.grdecl")
         layer.loadKeyword( kw )
         b1 = layer.getBlock( 1 )
@@ -179,7 +186,7 @@ class FaultBlockTest(EclTest):
         nb = b1.getNeighbours()
         self.assertTrue( b2 in nb )
         self.assertTrue( b3 in nb )
-        
+
         polylines1 = CPolylineCollection()
         p1 = polylines1.createPolyline(name="P1")
         p1.addPoint(4,0)
@@ -198,13 +205,13 @@ class FaultBlockTest(EclTest):
         self.assertTrue( b2 in nb )
         self.assertFalse( b3 in nb )
 
-        
+
 
         layer.addFaultBarrier( faults["FY"] )
         nb = b1.getNeighbours()
         self.assertTrue( b2 in nb )
         self.assertFalse( b3 in nb )
-        
+
         layer.addFaultBarrier( faults["FX"] )
         nb = b1.getNeighbours()
         self.assertEqual( len(nb) , 0 )
@@ -228,14 +235,16 @@ class FaultBlockTest(EclTest):
                 fileH.write("1 1 1 1 1 2 2 2 \n")
                 fileH.write("1 1 1 1 1 2 2 2 \n")
                 fileH.write("/\n")
-                
-            kw = EclKW.read_grdecl(open("faultblock.grdecl") , "FAULTBLK" , ecl_type = EclDataType.ECL_INT)
+
+            with cwrap.open("faultblock.grdecl") as f:
+                kw = EclKW.read_grdecl(
+                    f, "FAULTBLK", ecl_type=EclDataType.ECL_INT)
             with open("faults.grdecl" , "w") as f:
                 f.write("FAULTS\n")
                 f.write("\'FX\'   4   4   1   4   1   1  'X'  /\n")
                 f.write("\'FX\'   5   5   5   8   1   1  'X'  /\n")
                 f.write("/")
-            
+
             faults = FaultCollection( grid , "faults.grdecl")
         layer.loadKeyword( kw )
         b1 = layer.getBlock( 1 )
@@ -243,16 +252,10 @@ class FaultBlockTest(EclTest):
 
         nb = b1.getNeighbours()
         self.assertTrue( b2 in nb )
-        
+
         layer.addFaultBarrier( faults["FX"] , link_segments = False)
         nb = b1.getNeighbours()
         self.assertTrue( b2 in nb )
-
-
-
-        
-
-
 
     def test_fault_block_edge(self):
         grid = EclGrid.createRectangular( (5,5,1) , (1,1,1) )
@@ -266,7 +269,7 @@ class FaultBlockTest(EclTest):
         layer = FaultBlockLayer( grid , 0 )
         #with self.assertRaises:
         #    layer.getEdgePolygon( )
-        
+
 
 
     def test_fault_block_layer(self):
@@ -275,7 +278,7 @@ class FaultBlockTest(EclTest):
 
         with self.assertRaises(ValueError):
             layer = FaultBlockLayer( self.grid , self.grid.getGlobalSize()  )
-            
+
         layer = FaultBlockLayer( self.grid , 1 )
         self.assertEqual( 1 , layer.getK() )
 
@@ -303,7 +306,7 @@ class FaultBlockTest(EclTest):
         with self.assertRaises(IndexError):
             l2 = layer[2]
 
-            
+
         self.assertEqual( True , 1 in layer)
         self.assertEqual( True , 2 in layer)
         self.assertEqual( False , 77 in layer)
@@ -311,7 +314,7 @@ class FaultBlockTest(EclTest):
 
         l1 = layer.getBlock( 1 )
         self.assertTrue( isinstance(l1 , FaultBlock ))
-        
+
         with self.assertRaises(KeyError):
             l =layer.getBlock(66)
 
@@ -321,17 +324,17 @@ class FaultBlockTest(EclTest):
         layer.deleteBlock(2)
         self.assertEqual( 1 , len(layer))
         blk = layer[0]
-        self.assertEqual( blk.getBlockID() , 1 ) 
+        self.assertEqual( blk.getBlockID() , 1 )
 
         with self.assertRaises(KeyError):
             layer.addBlock(1)
-            
+
         blk2 = layer.addBlock(2)
-        self.assertEqual( len(layer) , 2 ) 
-        
+        self.assertEqual( len(layer) , 2 )
+
         blk3 = layer.addBlock()
-        self.assertEqual( len(layer) , 3 ) 
-        
+        self.assertEqual( len(layer) , 3 )
+
 
         layer.addBlock(100)
         layer.addBlock(101)
@@ -364,13 +367,13 @@ class FaultBlockTest(EclTest):
         grid = EclGrid.createRectangular( (4,1,1) , (1,1,1) )
         layer = FaultBlockLayer( self.grid , 0 )
         polyline = Polyline( init_points = [ (1.99 , 0.001) , (2.01 , 0.99)])
-        
+
         points = [((1,0) , (2,0))]
-        
+
         geo_layer = layer.getGeoLayer()
         for p1,p2 in points:
             self.assertTrue(geo_layer.cellContact( p1 , p2 ))
-            
+
         layer.addPolylineBarrier( polyline )
         for p1,p2 in points:
             print(p1,p2)
@@ -382,7 +385,7 @@ class FaultBlockTest(EclTest):
         grid = EclGrid.createRectangular( (10,10,1) , (1,1,1) )
         layer = FaultBlockLayer( self.grid , 0 )
         polyline = Polyline( init_points = [ (0.1 , 0.9) , (8.9,0.9) , (8.9,8.9) ])
-        
+
         points = [((0,0) , (0,1)),
                   ((2,0) , (2,1)),
                   ((4,0) , (4,1)),
@@ -393,18 +396,18 @@ class FaultBlockTest(EclTest):
                   ((8,3) , (9,3)),
                   ((8,5) , (9,5)),
                   ((8,7) , (9,7))]
-        
+
         geo_layer = layer.getGeoLayer()
         for p1,p2 in points:
             self.assertTrue(geo_layer.cellContact( p1 , p2 ))
-            
+
         layer.addPolylineBarrier( polyline )
         for p1,p2 in points:
             print(p1,p2)
             self.assertFalse(geo_layer.cellContact( p1 , p2 ))
 
 
-        
+
 
 
 
@@ -418,7 +421,7 @@ class FaultBlockTest(EclTest):
         with self.assertRaises(TypeError):
             layer.exportKeyword(kw2)
 
-            
+
     def test_internal_blocks(self):
         nx = 8
         ny = 8
@@ -438,15 +441,17 @@ class FaultBlockTest(EclTest):
                 fileH.write("1 1 1 1 1 2 2 2 \n")
                 fileH.write("/\n")
 
+            with cwrap.open("faultblock.grdecl") as f:
+                kw = EclKW.read_grdecl(
+                    f, "FAULTBLK", ecl_type=EclDataType.ECL_INT)
 
-            kw = EclKW.read_grdecl(open("faultblock.grdecl") , "FAULTBLK" , ecl_type = EclDataType.ECL_INT)
-            with open("faults.grdecl" , "w") as f:
+            with open("faults.grdecl", "w") as f:
                 f.write("FAULTS\n")
                 f.write("\'FX\'   4   4   1   4   1   1  'X'  /\n")
                 f.write("\'FX\'   5   5   4   4   1   1  'Y'  /\n")
                 f.write("\'FX\'   5   5   5   8   1   1  'X'  /\n")
                 f.write("/")
-            
+
             faults = FaultCollection( grid , "faults.grdecl")
 
         layer.loadKeyword( kw )

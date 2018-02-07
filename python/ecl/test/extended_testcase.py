@@ -128,8 +128,8 @@ class ExtendedTestCase(TestCase):
             self.fail("The directory: %s exists!" % path)
 
     def __filesAreEqual(self, first, second):
-        buffer1 = open(first).read()
-        buffer2 = open(second).read()
+        buffer1 = open(first, "rb").read()
+        buffer2 = open(second, "rb").read()
 
         return buffer1 == buffer2
 

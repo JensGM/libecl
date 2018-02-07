@@ -15,6 +15,7 @@
 #  See the GNU General Public License at <http://www.gnu.org/licenses/gpl.html>
 #  for more details.
 import os
+import cwrap
 from random import randint
 from ecl import EclDataType
 from ecl.eclfile import FortIO, EclKW , openFortIO, EclFile
@@ -22,12 +23,7 @@ from ecl.test import TestAreaContext
 from tests import EclTest
 
 
-
-
 class FortIOTest(EclTest):
-
-
-
 
     def test_open_write(self):
         with TestAreaContext("python/fortio/write"):
@@ -76,8 +72,8 @@ class FortIOTest(EclTest):
                 kw1.fwrite(f)
                 pos1 = f.getPosition( )
                 kw2.fwrite(f)
-            
-            t.sync( ) 
+
+            t.sync( )
             # Truncate file in read mode; should fail hard.
             with openFortIO("file") as f:
                 with self.assertRaises(IOError):
@@ -120,7 +116,7 @@ class FortIOTest(EclTest):
                 kw1.fwrite( f )
                 self.assertEqual( f.filename() , "file")
 
-            t.sync( ) 
+            t.sync( )
 
             with openFortIO("file") as f:
                 kw2 = EclKW.fread( f )
@@ -134,7 +130,7 @@ class FortIOTest(EclTest):
             with openFortIO("fortran_file" , mode = FortIO.WRITE_MODE) as f:
                 kw1.fwrite( f )
 
-            with open("text_file" , "w") as f:
+            with cwrap.open("text_file" , "w") as f:
                 kw1.write_grdecl( f )
 
             self.assertTrue( FortIO.isFortranFile( "fortran_file" ))

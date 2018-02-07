@@ -682,6 +682,9 @@ class EclGrid(BaseCClass):
         nx = self.getNX()
         ny = self.getNY()
         nz = self.getNZ()
+        assert isinstance(nx, int)
+        assert isinstance(ny, int)
+        assert isinstance(nz, int)
 
         corner = 0
 
@@ -697,8 +700,12 @@ class EclGrid(BaseCClass):
             k -= 1
             corner += 4
 
-        i, j, k = int(i), int(j), int(k)
-        corner = int(corner)
+        i, j, k = i, j, k
+        corner = corner
+        assert isinstance(i, int)
+        assert isinstance(j, int)
+        assert isinstance(k, int)
+        assert isinstance(corner, int)
         if self._ijk_valid(i, j, k):
             return self.getCellCorner(corner, global_index=i + j*nx + k*nx*ny)
         else:
