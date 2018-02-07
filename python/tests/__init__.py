@@ -10,7 +10,7 @@ def source_root():
     src = '@CMAKE_CURRENT_SOURCE_DIR@/../..'
     if os.path.isdir(src):
         return os.path.realpath(src)
-    
+
     # If the file was not correctly configured by cmake, look for the source
     # folder, assuming the build folder is inside the source folder.
     path_list = os.path.dirname(os.path.abspath(__file__)).split("/")
@@ -26,7 +26,7 @@ def source_root():
 # test methods as requiring Statoil testdata. If Statoil testdata has not been
 # configured as part of the build process these tests will be skipped.
 #
-# Ideally the statoil_test() implementation should just be a suitable wrapper of: 
+# Ideally the statoil_test() implementation should just be a suitable wrapper of:
 #
 #       skipUnless(EclTest.STATOIL_DATA, "Missing Statoil testdata")
 #
@@ -58,7 +58,7 @@ def statoil_test():
     Will mark a test method or an entire test class as dependent on Statoil testdata.
     """
     def decorator(test_item):
-        if not isinstance(test_item, (type, types.ClassType)):
+        if not isinstance(test_item, type):
             if not EclTest.STATOIL_DATA:
                 @functools.wraps(test_item)
                 def skip_wrapper(*args, **kwargs):
@@ -77,6 +77,4 @@ def statoil_test():
 class EclTest(ExtendedTestCase):
     SOURCE_ROOT = source_root()
     TESTDATA_ROOT = os.path.join(SOURCE_ROOT, "test-data")
-    STATOIL_DATA = os.path.islink(os.path.join(TESTDATA_ROOT, "Statoil")) 
-
-
+    STATOIL_DATA = os.path.islink(os.path.join(TESTDATA_ROOT, "Statoil"))

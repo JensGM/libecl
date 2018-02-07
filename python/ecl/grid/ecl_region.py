@@ -207,11 +207,12 @@ class EclRegion(BaseCClass):
         """
         return self._alloc_copy( )
 
-
     def __nonzero__(self):
         global_list = self.get_global_list()
         return len(global_list) > 0
 
+    def __bool__(self):
+        return self.__nonzero__()
 
     def __iand__(self , other):
         """
